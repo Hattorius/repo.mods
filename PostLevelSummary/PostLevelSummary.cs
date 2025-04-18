@@ -6,6 +6,7 @@ using TMPro;
 using UnityEngine;
 using PostLevelSummary.Models;
 using PostLevelSummary.Patches;
+using System.Threading.Tasks;
 
 namespace PostLevelSummary;
 
@@ -43,7 +44,7 @@ public class PostLevelSummary : BaseUnityPlugin
             }
             else
             {
-                TextInstance.SetActive(false);
+                TextInstance.SetActive(true);
             }
 
             _inshop = value;

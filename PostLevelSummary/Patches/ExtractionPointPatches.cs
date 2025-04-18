@@ -2,19 +2,20 @@
 using System.Collections.Generic;
 using System.Text;
 using HarmonyLib;
+using PostLevelSummary.Models;
 
 namespace PostLevelSummary.Patches
 {
     [HarmonyPatch(typeof(ExtractionPoint))]
     class ExtractionPointPatches
     {
-        [HarmonyPatch("StateComplete")]
-        [HarmonyPostfix]
-        public static void StateCompletePostfix()
+        [HarmonyPatch("StateSet")]
+        [HarmonyPrefix]
+        public static void StateSetPrefix(ExtractionPoint.State newState)
         {
             if (PostLevelSummary.InGame)
             {
-                PostLevelSummary.Level.Extracted();
+                StateChangedPrefix(newState);
             }
         }
 
@@ -22,12 +23,49 @@ namespace PostLevelSummary.Patches
         [HarmonyPrefix]
         public static void StateSetRPCPrefix(ExtractionPoint.State state)
         {
-            if (state.Equals(ExtractionPoint.State.Complete))
+            if (PostLevelSummary.InGame)
             {
-                if (PostLevelSummary.InGame)
-                {
-                    PostLevelSummary.Level.Extracted();
-                }
+                StateChangedPrefix(state);
+            }
+        }
+
+        [HarmonyPatch("StateSet")]
+        [HarmonyPostfix]
+        public static void StateSetPostfix(ExtractionPoint.State newState)
+        {
+            if (PostLevelSummary.InGame)
+            {
+                StateChangedPostfix(newState);
+            }
+        }
+
+        [HarmonyPatch("StateSetRPC")]
+        [HarmonyPostfix]
+        public static void StateSetRPCPostfix(ExtractionPoint.State state)
+        {
+            if (PostLevelSummary.InGame)
+            {
+                StateChangedPostfix(state);
+            }
+        }
+
+        // System.Exception: Parameter "state" not found in method void ExtractionPoint::StateSet(ExtractionPoint+State newState)
+
+        private static void StateChangedPrefix(ExtractionPoint.State state)
+        {
+            PostLevelSummary.Logger.LogDebug($"New state: {state}");
+            if (state == ExtractionPoint.State.Extracting) {
+                PostLevelSummary.Level.Extracting = true;
+            }
+        }
+
+        private static void StateChangedPostfix(ExtractionPoint.State state)
+        {
+            PostLevelSummary.Logger.LogDebug($"New state: {state}");
+
+            if (state == ExtractionPoint.State.Complete)
+            {
+                PostLevelSummary.Level.Extracting = false;
             }
         }
     }

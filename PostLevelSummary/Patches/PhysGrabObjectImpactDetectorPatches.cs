@@ -11,7 +11,7 @@ namespace PostLevelSummary.Patches
     [HarmonyPatch(typeof(PhysGrabObjectImpactDetector))]
     class PhysGrabObjectImpactDetectorPatches
     {
-        [HarmonyPatch("BreakRPC")]
+/*        [HarmonyPatch("BreakRPC")]
         [HarmonyPostfix]
         static void BreakPostfix(PhysGrabObjectImpactDetector? __instance)
         {
@@ -29,6 +29,6 @@ namespace PostLevelSummary.Patches
         {
             PostLevelSummary.Logger.LogInfo("DestroyObjectRPC");
             PostLevelSummary.Level.ItemBroken();
-        }
+        }*/
     }
 }

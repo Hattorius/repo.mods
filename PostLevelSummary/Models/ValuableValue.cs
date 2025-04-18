@@ -6,6 +6,7 @@ namespace PostLevelSummary.Models
 {
     public class ValuableValue
     {
+        public ValuableObject Object { get; set; }
         public int InstanceId { get; set; }
         public float Value { get; set; }
     }
