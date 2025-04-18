@@ -17,5 +17,18 @@ namespace PostLevelSummary.Patches
                 PostLevelSummary.Level.Extracted();
             }
         }
+
+        [HarmonyPatch("StateSetRPC")]
+        [HarmonyPrefix]
+        public static void StateSetRPCPrefix(ExtractionPoint.State state)
+        {
+            if (state.Equals(ExtractionPoint.State.Complete))
+            {
+                if (PostLevelSummary.InGame)
+                {
+                    PostLevelSummary.Level.Extracted();
+                }
+            }
+        }
     }
 }

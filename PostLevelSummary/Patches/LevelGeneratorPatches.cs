@@ -26,14 +26,6 @@ namespace PostLevelSummary.Patches
 
             PostLevelSummary.Logger.LogDebug($"Generating new level: {Instance.Level.name}");
 
-            if (Instance.Level.NarrativeName == "Main Menu")
-            {
-                PostLevelSummary.InMenu = true;
-            } else
-            {
-                PostLevelSummary.InMenu = false;
-            }
-
             if (Instance.Level.HasEnemies)
             {
                 PostLevelSummary.InGame = true;
@@ -42,22 +34,37 @@ namespace PostLevelSummary.Patches
             {
                 PostLevelSummary.InGame = false;
             }
-
-            if (Instance.Level.name.ToLower().Contains("shop"))
-            {
-                PostLevelSummary.InShop = true;
-            } else
-            {
-                PostLevelSummary.InShop = false;
-            }
         }
 
         [HarmonyPatch("GenerateDone")]
         [HarmonyPostfix]
         public static void GenerateDonePostfix()
         {
+            if (Instance == null) return;
             PostLevelSummary.Logger.LogDebug("Done generating new level");
-            PostLevelSummary.Logger.LogDebug($"Total value: {PostLevelSummary.Level.TotalValue}");
+
+            if (Instance.Level.NarrativeName == "Main Menu")
+            {
+                PostLevelSummary.InMenu = true;
+            }
+            else
+            {
+                PostLevelSummary.InMenu = false;
+            }
+
+            if (Instance.Level.HasEnemies)
+            {
+                PostLevelSummary.Logger.LogDebug($"Total value: {PostLevelSummary.Level.TotalValue}");
+            }
+
+            if (Instance.Level.name.ToLower().Contains("shop"))
+            {
+                PostLevelSummary.InShop = true;
+            }
+            else
+            {
+                PostLevelSummary.InShop = false;
+            }
         }
     }
 }

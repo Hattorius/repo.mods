@@ -1,0 +1,9 @@
+{
+    "name": "PostLevelSummary",
+    "description": "A non-invasive R.E.P.O. mod that gives you end-of-level stats! See how much value & items you extracted, how much was lost due to damage, and how many hits items took. No extra advantages!",
+    "version": "1.0.0",
+    "dependencies": [
+        "BepInEx-BepInExPack-5.4.2100"
+    ],
+    "website_url": "https://github.com/Hattorius/repo.mods"
+}

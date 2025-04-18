@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using HarmonyLib;
+using Newtonsoft.Json;
+using Sirenix.Serialization.Utilities;
 using Unity.VisualScripting;
 
 namespace PostLevelSummary.Models
@@ -13,6 +16,7 @@ namespace PostLevelSummary.Models
         public float TotalValue = 0f;
         public List<ValuableObject> Valuables = new();
         public List<ValuableValue> ValuableValues = new();
+        public Dictionary<int, ValuableObject> ValuableRegistry = new();
 
         public int ItemsHit = 0;
         public float TotalValueLost = 0f;
@@ -30,14 +34,20 @@ namespace PostLevelSummary.Models
             TotalValue = 0f;
             Valuables.Clear();
             ValuableValues.Clear();
+            ValuableRegistry.Clear();
 
             ItemsHit = 0;
             TotalValueLost = 0f;
             ItemsBroken = 0;
         }
 
-        public void AddValuable(ValuableObject val)
+        public async Task AddValuable(ValuableObject val)
         {
+            while (!val.dollarValueSet)
+            {
+                await Task.Delay(50);
+            }
+
             TotalItems += 1;
             TotalValue += val.dollarValueOriginal;
             Valuables.Add(val);
@@ -46,12 +56,14 @@ namespace PostLevelSummary.Models
                 InstanceId = val.GetInstanceID(),
                 Value = val.dollarValueOriginal
             });
+            ValuableRegistry[val.GetInstanceID()] = val;
 
             PostLevelSummary.Logger.LogDebug($"Created Valuable Object! {val.name} Val: {val.dollarValueOriginal}");
         }
 
         public void CheckValueChange(ValuableObject val)
         {
+
             ValuableValue vv = ValuableValues.Find(v => v.InstanceId == val.GetInstanceID());
 
             if (vv.Value != val.dollarValueCurrent)
@@ -59,25 +71,40 @@ namespace PostLevelSummary.Models
                 var lostValue = vv.Value - val.dollarValueCurrent;
                 PostLevelSummary.Logger.LogDebug($"{val.name} lost {lostValue} value!");
 
-                ItemsHit = ItemsHit + 1;
-                TotalValueLost = TotalValueLost + lostValue;
+                ItemsHit += 1;
+                TotalValueLost += lostValue;
                 vv.Value = val.dollarValueCurrent;
+
+                if (val.dollarValueCurrent == 0f)
+                {
+                    ValuableRegistry.Keys.Where(k => !ValuableValues.Select(v => v.InstanceId).Contains(k)).ForEach(k => ValuableRegistry.Remove(k));
+                    ValuableValues.RemoveAll(v => ValuableRegistry[v.InstanceId].IsDestroyed());
+                    ItemsBroken += 1;
+
+                    PostLevelSummary.Logger.LogDebug($"1 item destroyed!");
+                }
+            }
+
+            if (val.dollarValueCurrent == 0f)
+            {
+                ItemBroken();
             }
         }
 
-        public void ItemBroken(ValuableObject val)
+        public async Task ItemBroken()
         {
-            if (val.dollarValueCurrent != 0f) return;
+            var destroyed = ValuableRegistry.Keys.Where(k => !ValuableValues.Select(v => v.InstanceId).Contains(k)).Select(v => ValuableRegistry[v]);
+            var totalDestroyed = destroyed.Count();
+            var totalValueDestroyed = destroyed.Select(v => v.dollarValueCurrent).Sum();
 
-            ValuableValue vv = ValuableValues.Find(v => v.InstanceId == val.GetInstanceID());
+            ItemsHit += totalDestroyed;
+            TotalValueLost += totalValueDestroyed;
+            ItemsBroken += totalDestroyed;
 
-            var lostValue = vv.Value - val.dollarValueCurrent;
-            PostLevelSummary.Logger.LogDebug($"Broken {val.name}!");
-            ItemsHit = ItemsHit + 1;
-            TotalValueLost = TotalValueLost + lostValue;
-            ItemsBroken += 1;
+            PostLevelSummary.Logger.LogDebug($"{totalDestroyed} item(s) destroyed! Lost ${totalValueDestroyed} value");
 
-            ValuableValues.Remove(vv);
+            ValuableRegistry.Keys.Where(k => !ValuableValues.Select(v => v.InstanceId).Contains(k)).ForEach(k => ValuableRegistry.Remove(k));
+            ValuableValues.RemoveAll(v => ValuableRegistry[v.InstanceId].IsDestroyed());
         }
 
         public void Extracted()

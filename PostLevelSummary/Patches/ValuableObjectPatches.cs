@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using System.Text;
 using HarmonyLib;
+using Unity.VisualScripting;
 
 namespace PostLevelSummary.Patches
 {
     [HarmonyPatch(typeof(ValuableObject))]
     class ValuableObjectPatches
     {
-        [HarmonyPatch("DollarValueSetLogic")]
+        [HarmonyPatch("DollarValueSet")]
         [HarmonyPostfix]
-        static void DollarValueSetLogicPostfix(ValuableObject __instance)
+        static void DollarValueSetPostfix(ValuableObject __instance)
         {
             if (__instance.name.ToLower().Contains("surplus"))
                 return;
