@@ -15,16 +15,22 @@ namespace PostLevelSummary.Models
         public int TotalItems = 0;
         public float TotalValue = 0f;
         public List<ValuableValue> ValuableValues = new();
+        public List<int> DollarHaulList = new();
 
         public int ItemsHit = 0;
         public float TotalValueLost = 0f;
         public int ItemsBroken = 0;
         public float ExtractedValue = 0f;
         public int ExtractedItems = 0;
+
         public bool Extracting = false;
+        public int ExtractedChecksLeft = 0;
+
+        private readonly object _locker = new();
+        private Task running;
 
         public LevelValues() {
-            run();
+            runTask();
         }
 
         public void Clear()
@@ -34,11 +40,16 @@ namespace PostLevelSummary.Models
             TotalItems = 0;
             TotalValue = 0f;
             ValuableValues.Clear();
+            DollarHaulList.Clear();
 
             ItemsHit = 0;
             TotalValueLost = 0f;
             ItemsBroken = 0;
+            ExtractedValue = 0f;
+            ExtractedItems = 0;
+
             Extracting = false;
+            ExtractedChecksLeft = 0;
         }
 
         public async Task AddValuable(ValuableObject val)
@@ -58,6 +69,29 @@ namespace PostLevelSummary.Models
             });
 
             PostLevelSummary.Logger.LogDebug($"Created Valuable Object! {val.name} Val: {val.dollarValueOriginal}");
+            runTask();
+        }
+
+        private void runTask()
+        {
+            lock (_locker)
+            {
+                if (running != null && 
+                    running.Status != TaskStatus.Canceled &&
+                    running.Status != TaskStatus.Faulted &&
+                    running.Status != TaskStatus.RanToCompletion
+                )
+                {
+                    return;
+                }
+
+                if (running != null)
+                {
+                    PostLevelSummary.Logger.LogWarning($"Lost track of our runner / checker: {running} ({running.Status})");
+                }
+
+                running = run();
+            }
         }
 
         private async Task run()
@@ -66,7 +100,7 @@ namespace PostLevelSummary.Models
             {
                 await Task.Delay(100);
 
-                if (PostLevelSummary.InGame)
+                if (PostLevelSummary.InGame && !PostLevelSummary.InShop)
                 {
                     PostLevelSummary.Logger.LogWarning(ValuableValues.Count);
                     List<int> toBeRemoved = new();
@@ -75,9 +109,19 @@ namespace PostLevelSummary.Models
                     {
                         if (!val.Object)
                         {
-                            ItemsHit += 1;
-                            TotalValueLost += val.Value;
-                            ItemsBroken += 1;
+                            if (DollarHaulList.Contains(val.InstanceId) && (ExtractedChecksLeft > 0 || Extracting))
+                            {
+                                ExtractedValue += val.Value;
+                                ExtractedItems += 1;
+
+                                if (!Extracting)
+                                    ExtractedChecksLeft -= 1;
+                            } else
+                            {
+                                ItemsHit += 1;
+                                TotalValueLost += val.Value;
+                                ItemsBroken += 1;
+                            }
 
                             toBeRemoved.Add(val.InstanceId);
 

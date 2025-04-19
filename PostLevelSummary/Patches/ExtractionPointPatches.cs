@@ -49,13 +49,14 @@ namespace PostLevelSummary.Patches
             }
         }
 
-        // System.Exception: Parameter "state" not found in method void ExtractionPoint::StateSet(ExtractionPoint+State newState)
-
         private static void StateChangedPrefix(ExtractionPoint.State state)
         {
             PostLevelSummary.Logger.LogDebug($"New state: {state}");
-            if (state == ExtractionPoint.State.Extracting) {
+
+            if (state == ExtractionPoint.State.Extracting)
+            {
                 PostLevelSummary.Level.Extracting = true;
+                PostLevelSummary.Level.ExtractedChecksLeft = 20; // 20 * 100 ms = 2 seconds
             }
         }
 
@@ -66,6 +67,7 @@ namespace PostLevelSummary.Patches
             if (state == ExtractionPoint.State.Complete)
             {
                 PostLevelSummary.Level.Extracting = false;
+                PostLevelSummary.Level.ExtractedChecksLeft = 20; // 20 * 100 ms = 2 seconds
             }
         }
     }

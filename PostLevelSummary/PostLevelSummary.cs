@@ -17,21 +17,8 @@ public class PostLevelSummary : BaseUnityPlugin
     public static new ManualLogSource Logger;
     private readonly Harmony harmony = new("Hattorius.PostLevelSummary");
 
-    public static LevelValues Level = new();
+    public static LevelValues Level;
 
-    private static bool _ingame = false;
-    public static bool InGame {
-        get => _ingame;
-        set
-        {
-            if (value)
-            {
-                ResetValues();
-            }
-
-            _ingame = value;
-        }
-    }
     private static bool _inshop = false;
     public static bool InShop {
         get => _inshop;
@@ -40,18 +27,44 @@ public class PostLevelSummary : BaseUnityPlugin
             if (value)
             {
                 UI.Update();
-                TextInstance.SetActive(true);
-            }
-            else
-            {
-                TextInstance.SetActive(true);
             }
 
+            TextInstance.SetActive(value || _inlobby);
             _inshop = value;
         }
     }
+    private static bool _inlobby = false;
+    public static bool InLobby
+    {
+        get => _inlobby;
+        set
+        {
+            Logger.LogDebug($"In lobby: {value}");
+            if (value)
+            {
+                ResetValues();
+            }
 
-    public static bool InMenu = false;
+            _inlobby = value;
+        }
+    }
+    private static bool _inmenu = false;
+    public static bool InMenu
+    {
+        get => _inmenu;
+        set
+        {
+            Logger.LogDebug($"In menu: {value}");
+            if (value)
+            {
+                ResetValues();
+            }
+
+            _inmenu = value;
+        }
+    }
+
+    public static bool InGame = false;
     public static GameObject TextInstance;
     public static TextMeshProUGUI ValueText;
 
@@ -59,7 +72,8 @@ public class PostLevelSummary : BaseUnityPlugin
     {
         Logger = base.Logger;
         Instance = this;
-        
+        Level = new();
+
         // Prevent the plugin from being deleted
         this.gameObject.transform.parent = null;
         this.gameObject.hideFlags = HideFlags.HideAndDontSave;

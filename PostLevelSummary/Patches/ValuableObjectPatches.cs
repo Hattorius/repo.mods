@@ -28,6 +28,7 @@ namespace PostLevelSummary.Patches
                 return;
 
             PostLevelSummary.Logger.LogDebug($"Added to dollar haul list: {__instance.name}");
+            AddToDollarHaulList(__instance.GetInstanceID());
         }
 
         [HarmonyPatch("AddToDollarHaulListRPC")]
@@ -37,7 +38,41 @@ namespace PostLevelSummary.Patches
             if (__instance.name.ToLower().Contains("surplus"))
                 return;
 
-            PostLevelSummary.Logger.LogDebug($"Added to dollar haul list: {__instance.name}");
+            PostLevelSummary.Logger.LogDebug($"[RPC] Added to dollar haul list: {__instance.name}");
+            AddToDollarHaulList(__instance.GetInstanceID());
+        }
+
+        [HarmonyPatch("RemoveFromDollarHaulList")]
+        [HarmonyPostfix]
+        static void RemoveFromDollarHaulListPostix(ValuableObject __instance)
+        {
+            if (__instance.name.ToLower().Contains("surplus"))
+                return;
+
+            PostLevelSummary.Logger.LogDebug($"Removed from dollar haul list: {__instance.name}");
+            RemoveFromDollarHaulList(__instance.GetInstanceID());
+        }
+
+        [HarmonyPatch("RemoveFromDollarHaulListRPC")]
+        [HarmonyPostfix]
+        static void RemoveFromDollarHaulListRPCPostix(ValuableObject __instance)
+        {
+            if (__instance.name.ToLower().Contains("surplus"))
+                return;
+
+            PostLevelSummary.Logger.LogDebug($"[RPC] Removed from dollar haul list: {__instance.name}");
+            RemoveFromDollarHaulList(__instance.GetInstanceID());
+        }
+
+        private static void AddToDollarHaulList(int id)
+        {
+            if (PostLevelSummary.Level.DollarHaulList.Contains(id)) return;
+            PostLevelSummary.Level.DollarHaulList.Add(id);
+        }
+
+        private static void RemoveFromDollarHaulList(int id)
+        {
+            PostLevelSummary.Level.DollarHaulList.Remove(id);
         }
     }
 }

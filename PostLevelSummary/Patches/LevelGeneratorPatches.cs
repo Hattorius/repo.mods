@@ -18,52 +18,48 @@ namespace PostLevelSummary.Patches
             PostLevelSummary.Logger.LogDebug("Captured LevelGenerator instance.");
         }
 
-        [HarmonyPatch("StartRoomGeneration")]
-        [HarmonyPrefix]
-        public static void StartRoomGenerationPrefix()
-        {
-            if (Instance == null) return;
-
-            PostLevelSummary.Logger.LogDebug($"Generating new level: {Instance.Level.name}");
-
-            if (Instance.Level.HasEnemies)
-            {
-                PostLevelSummary.InGame = true;
-            }
-            else
-            {
-                PostLevelSummary.InGame = false;
-            }
-        }
-
         [HarmonyPatch("GenerateDone")]
-        [HarmonyPostfix]
-        public static void GenerateDonePostfix()
+        [HarmonyPrefix]
+        public static void GenerateDonePrefix()
         {
             if (Instance == null) return;
-            PostLevelSummary.Logger.LogDebug("Done generating new level");
+            PostLevelSummary.Logger.LogDebug($"Done generating new level: {Instance.Level.name} ({Instance.Level.NarrativeName})");
 
-            if (Instance.Level.NarrativeName == "Main Menu")
+            if (Instance.Level.name.ToLower().Contains("menu"))
             {
                 PostLevelSummary.InMenu = true;
             }
-            else
+            else if (Instance.Level.name.ToLower().Contains("lobby"))
+            {
+                PostLevelSummary.InLobby = true;
+            }
+            else if (Instance.Level.name.ToLower().Contains("shop"))
+            {
+                PostLevelSummary.InShop = true;
+            }
+            else if (Instance.Level.HasEnemies && !PostLevelSummary.InGame)
+            {
+                PostLevelSummary.InGame = true;
+            }
+
+            if (!Instance.Level.name.ToLower().Contains("menu"))
             {
                 PostLevelSummary.InMenu = false;
             }
 
-            if (Instance.Level.HasEnemies)
+            if (!Instance.Level.name.ToLower().Contains("lobby"))
             {
-                PostLevelSummary.Logger.LogDebug($"Total value: {PostLevelSummary.Level.TotalValue}");
+                PostLevelSummary.InLobby = false;
             }
 
-            if (Instance.Level.name.ToLower().Contains("shop"))
-            {
-                PostLevelSummary.InShop = true;
-            }
-            else
+            if (!Instance.Level.name.ToLower().Contains("shop"))
             {
                 PostLevelSummary.InShop = false;
+            }
+
+            if (!Instance.Level.HasEnemies)
+            {
+                PostLevelSummary.InGame = false;
             }
         }
     }
