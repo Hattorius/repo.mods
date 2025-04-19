@@ -105,7 +105,6 @@ namespace PostLevelSummary.Models
 
                 if (PostLevelSummary.InGame && !PostLevelSummary.InShop && !PostLevelSummary.InLobby)
                 {
-                    PostLevelSummary.Logger.LogWarning(ValuableValues.Count);
                     List<int> toBeRemoved = new();
 
                     ValuableValues.ForEach(val =>
