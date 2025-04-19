@@ -26,12 +26,9 @@ namespace PostLevelSummary.Models
         public bool Extracting = false;
         public int ExtractedChecksLeft = 0;
 
+        private bool _run = false;
         private readonly object _locker = new();
-        private Task running;
-
-        public LevelValues() {
-            runTask();
-        }
+        private Task? running;
 
         public void Clear()
         {
@@ -90,17 +87,23 @@ namespace PostLevelSummary.Models
                     PostLevelSummary.Logger.LogWarning($"Lost track of our runner / checker: {running} ({running.Status})");
                 }
 
+                _run = true;
                 running = run();
             }
         }
 
+        public void StopTask()
+        {
+            _run = false;
+        }
+
         private async Task run()
         {
-            while (true)
+            while (_run)
             {
                 await Task.Delay(100);
 
-                if (PostLevelSummary.InGame && !PostLevelSummary.InShop)
+                if (PostLevelSummary.InGame && !PostLevelSummary.InShop && !PostLevelSummary.InLobby)
                 {
                     PostLevelSummary.Logger.LogWarning(ValuableValues.Count);
                     List<int> toBeRemoved = new();
@@ -116,7 +119,8 @@ namespace PostLevelSummary.Models
 
                                 if (!Extracting)
                                     ExtractedChecksLeft -= 1;
-                            } else
+                            }
+                            else
                             {
                                 ItemsHit += 1;
                                 TotalValueLost += val.Value;

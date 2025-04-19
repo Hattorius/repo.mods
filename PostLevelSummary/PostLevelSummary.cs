@@ -78,6 +78,7 @@ public class PostLevelSummary : BaseUnityPlugin
         this.gameObject.transform.parent = null;
         this.gameObject.hideFlags = HideFlags.HideAndDontSave;
 
+        harmony.PatchAll(typeof(SceneManagerPatches));
         harmony.PatchAll(typeof(ValuableObjectPatches));
         harmony.PatchAll(typeof(LevelGeneratorPatches));
         harmony.PatchAll(typeof(PhysGrabObjectImpactDetectorPatches));
