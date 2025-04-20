@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace PostLevelSummary;
 
-[BepInPlugin("Hattorius.PostLevelSummary", "PostLevelSummary", "1.0")]
+[BepInPlugin("Hattorius.PostLevelSummary", "PostLevelSummary", "2.0.0")]
 public class PostLevelSummary : BaseUnityPlugin
 {
     internal static PostLevelSummary Instance { get; private set; } = null!;
